@@ -10,13 +10,13 @@ final class StringHasherSpy implements StringHasher
 
     public function __construct(
         private readonly StringHasher $innerHasher
-    )
-    {
+    ) {
     }
 
     public function hash(string $word): string
     {
         $this->wasCalled = true;
+
         return $this->innerHasher->hash($word);
     }
 
