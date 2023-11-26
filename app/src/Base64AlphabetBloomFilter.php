@@ -2,20 +2,16 @@
 
 namespace Nealio82\BloomFilter;
 
-final class LowercaseAlphanumericBloomFilter extends BloomFilter
+final class Base64AlphabetBloomFilter extends BloomFilter
 {
-    private const ASCII_LOWERCASE_CHARACTER_OFFSET = 87;
-
-    private const ASCII_NUMERIC_CHARACTER_NUMBER_NINE_POSITION = 57;
-
-    private const LOWER_CASE_ALPHANUMERIC_KEYSPACE_WIDTH = 36;
+    private const BASE64_ALPHABET_KEYSPACE_WIDTH_PLUS_PADDING_CHARACTER = 65;
 
     private \SplFixedArray $cache;
 
     public function __construct(
         private readonly StringHasher $hasher
     ) {
-        $this->cache = new \SplFixedArray(self::LOWER_CASE_ALPHANUMERIC_KEYSPACE_WIDTH);
+        $this->cache = new \SplFixedArray(self::BASE64_ALPHABET_KEYSPACE_WIDTH_PLUS_PADDING_CHARACTER);
     }
 
     protected function wordDefinitelyDoesNotExistInStorage(string $word): bool
@@ -35,7 +31,7 @@ final class LowercaseAlphanumericBloomFilter extends BloomFilter
     {
         $hash = $this->hasher->hash($word);
 
-        if (! \preg_match('/^[a-z0-9]+$/', $hash)) {
+        if (! \preg_match('/^[a-zA-Z0-9+\/=]+$/', $hash)) {
             throw new UnsupportedCharacterException(
                 \sprintf(
                     'The provided hashing algorithm produced a hash (%s) containing disallowed characters',
@@ -51,12 +47,18 @@ final class LowercaseAlphanumericBloomFilter extends BloomFilter
 
     private static function getIndexPositionForChar(string $character): int
     {
-        $position = \ord($character);
+        $positions
+            = \array_merge(
+                \array_map(static fn (int $item) => (string) $item, \range(0, 9)),
+                \array_map(static fn (int $item) => \chr($item), \range(65, 90)),
+                \array_map(static fn (int $item) => \chr($item), \range(97, 122)),
+                [
+                    '+',
+                    '/',
+                    '=',
+                ]
+            );
 
-        if ($position <= self::ASCII_NUMERIC_CHARACTER_NUMBER_NINE_POSITION) {
-            return (int) $character;
-        }
-
-        return $position - self::ASCII_LOWERCASE_CHARACTER_OFFSET;
+        return \array_search($character, $positions, true);
     }
 }

@@ -13,6 +13,7 @@ abstract class BloomFilter
     {
         $this->addItemToStorage($word);
     }
+
     abstract protected function wordDefinitelyDoesNotExistInStorage(string $word): bool;
 
     abstract protected function addItemToStorage(string $word): void;

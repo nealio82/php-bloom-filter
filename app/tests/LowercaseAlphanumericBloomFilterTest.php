@@ -4,7 +4,6 @@ namespace Test;
 
 use Nealio82\BloomFilter\LowercaseAlphanumericBloomFilter;
 use Nealio82\BloomFilter\UnsupportedCharacterException;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Test\Doubles\FixedStringHasher;
 use Test\Doubles\MismatchedStringHasher;
