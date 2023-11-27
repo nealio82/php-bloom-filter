@@ -12,10 +12,10 @@ final class MultiStrategyBloomFilter extends BloomFilter
         $this->filters = $filters;
     }
 
-    protected function candidateDefinitelyDoesNotExistInStorage(Candidate $candidate): bool
+    protected function candidateDefinitelyDoesNotExistInStorage(Value $value): bool
     {
         foreach ($this->filters as $filter) {
-            if (true === $filter->candidateDefinitelyDoesNotExistInStorage($candidate)) {
+            if (true === $filter->candidateDefinitelyDoesNotExistInStorage($value)) {
                 return true;
             }
         }
@@ -23,10 +23,10 @@ final class MultiStrategyBloomFilter extends BloomFilter
         return false;
     }
 
-    protected function addItemToStorage(Candidate $candidate): void
+    protected function addItemToStorage(Value $value): void
     {
         foreach ($this->filters as $filter) {
-            $filter->addItemToStorage($candidate);
+            $filter->addItemToStorage($value);
         }
     }
 }

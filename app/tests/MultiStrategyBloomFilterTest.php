@@ -2,12 +2,12 @@
 
 namespace Test;
 
-use Nealio82\BloomFilter\Candidate;
+use Nealio82\BloomFilter\Hasher\OriginalStringHasher;
 use Nealio82\BloomFilter\LowercaseAlphanumericBloomFilter;
 use Nealio82\BloomFilter\MultiStrategyBloomFilter;
+use Nealio82\BloomFilter\Value;
 use PHPUnit\Framework\TestCase;
 use Test\Doubles\BloomFilterSpy;
-use Test\Doubles\NonHashingStringHasher;
 use Test\Doubles\StubBloomFilter;
 
 final class MultiStrategyBloomFilterTest extends TestCase
@@ -15,14 +15,14 @@ final class MultiStrategyBloomFilterTest extends TestCase
     public function test_not_in_set_when_no_filters_find_item(): void
     {
         $filter = new MultiStrategyBloomFilter(
-            new LowercaseAlphanumericBloomFilter(new NonHashingStringHasher()),
-            new LowercaseAlphanumericBloomFilter(new NonHashingStringHasher()),
+            new LowercaseAlphanumericBloomFilter(new OriginalStringHasher()),
+            new LowercaseAlphanumericBloomFilter(new OriginalStringHasher()),
         );
 
-        $filter->store(new Candidate('test'));
+        $filter->store(new Value('test'));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('bar'))
+            $filter->definitelyNotInSet(new Value('bar'))
         );
     }
 
@@ -34,7 +34,7 @@ final class MultiStrategyBloomFilterTest extends TestCase
         $filter = new MultiStrategyBloomFilter($spy1, $spy2);
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('foo'))
+            $filter->definitelyNotInSet(new Value('foo'))
         );
 
         self::assertTrue($spy1->wasCalled());
@@ -50,7 +50,7 @@ final class MultiStrategyBloomFilterTest extends TestCase
         $filter = new MultiStrategyBloomFilter($spy1, $spy2, $spy3);
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('foo'))
+            $filter->definitelyNotInSet(new Value('foo'))
         );
     }
 
@@ -61,7 +61,7 @@ final class MultiStrategyBloomFilterTest extends TestCase
 
         $filter = new MultiStrategyBloomFilter($spy1, $spy2);
 
-        $filter->definitelyNotInSet(new Candidate('foo'));
+        $filter->definitelyNotInSet(new Value('foo'));
 
         self::assertTrue($spy1->wasCalled());
         self::assertTrue($spy2->wasCalled());
@@ -75,7 +75,7 @@ final class MultiStrategyBloomFilterTest extends TestCase
         $filter = new MultiStrategyBloomFilter($spy1, $spy2);
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('foo'))
+            $filter->definitelyNotInSet(new Value('foo'))
         );
     }
 
@@ -89,7 +89,7 @@ final class MultiStrategyBloomFilterTest extends TestCase
         self::assertSame('', $spy1->lastStoredWord);
         self::assertSame('', $spy2->lastStoredWord);
 
-        $filter->store(new Candidate('foo'));
+        $filter->store(new Value('foo'));
 
         self::assertSame('foo', $spy1->lastStoredWord);
         self::assertSame('foo', $spy2->lastStoredWord);

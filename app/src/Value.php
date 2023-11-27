@@ -2,7 +2,7 @@
 
 namespace Nealio82\BloomFilter;
 
-final readonly class Candidate
+final readonly class Value
 {
     public function __construct(
         private int|string $value

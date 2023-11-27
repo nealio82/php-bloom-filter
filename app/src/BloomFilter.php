@@ -4,17 +4,17 @@ namespace Nealio82\BloomFilter;
 
 abstract class BloomFilter
 {
-    public function definitelyNotInSet(Candidate $candidate): bool
+    public function definitelyNotInSet(Value $value): bool
     {
-        return $this->candidateDefinitelyDoesNotExistInStorage($candidate);
+        return $this->candidateDefinitelyDoesNotExistInStorage($value);
     }
 
-    public function store(Candidate $candidate): void
+    public function store(Value $value): void
     {
-        $this->addItemToStorage($candidate);
+        $this->addItemToStorage($value);
     }
 
-    abstract protected function candidateDefinitelyDoesNotExistInStorage(Candidate $candidate): bool;
+    abstract protected function candidateDefinitelyDoesNotExistInStorage(Value $value): bool;
 
-    abstract protected function addItemToStorage(Candidate $candidate): void;
+    abstract protected function addItemToStorage(Value $value): void;
 }

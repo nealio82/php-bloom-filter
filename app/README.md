@@ -18,8 +18,13 @@ often a better idea is to use the `MultiStrategyBloomFilter` with several differ
 the full explanation below for more on why this is the case).
 
 ```php
-use \Nealio82\BloomFilter\Base64AlphabetBloomFilter;
-use \Nealio82\BloomFilter\LowercaseAlphanumericBloomFilter;
+use Nealio82\BloomFilter\Base64AlphabetBloomFilter;
+use Nealio82\BloomFilter\Hasher\Base64StringHasher;
+use Nealio82\BloomFilter\Hasher\Md5StringHasher;
+use Nealio82\BloomFilter\Hasher\Sha1StringHasher;
+use Nealio82\BloomFilter\LowercaseAlphanumericBloomFilter;
+use Nealio82\BloomFilter\MultiStrategyBloomFilter;
+use Nealio82\BloomFilter\Value;
 
 $stringFilter = new MultiStrategyBloomFilter(
     new Base64AlphabetBloomFilter(
@@ -33,14 +38,14 @@ $stringFilter = new MultiStrategyBloomFilter(
     ),
 );
 
-$stringFilter->definitelyNotInSet('hello'); // true
+var_dump($stringFilter->definitelyNotInSet(new Value('hello'))); // true
 
-$stringFilter->store('hello');
+$stringFilter->store(new Value('hello'));
 
-$stringFilter->definitelyNotInSet('hello') // false
-$stringFilter->definitelyNotInSet('he') // false
+var_dump($stringFilter->definitelyNotInSet(new Value('hello'))); // false
+var_dump($stringFilter->definitelyNotInSet(new Value('he'))); // false
 
-$stringFilter->definitelyNotInSet('hello, world') // true
+var_dump($stringFilter->definitelyNotInSet(new Value('hello, world'))); // true
 ```
 
 ## More about Bloom filters

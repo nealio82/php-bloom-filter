@@ -3,7 +3,7 @@
 namespace Test\Doubles;
 
 use Nealio82\BloomFilter\BloomFilter;
-use Nealio82\BloomFilter\Candidate;
+use Nealio82\BloomFilter\Value;
 
 final class StubBloomFilter extends BloomFilter
 {
@@ -12,12 +12,12 @@ final class StubBloomFilter extends BloomFilter
     ) {
     }
 
-    protected function candidateDefinitelyDoesNotExistInStorage(Candidate $candidate): bool
+    protected function candidateDefinitelyDoesNotExistInStorage(Value $value): bool
     {
         return ! $this->willFindCandidates;
     }
 
-    protected function addItemToStorage(Candidate $candidate): void
+    protected function addItemToStorage(Value $value): void
     {
     }
 }

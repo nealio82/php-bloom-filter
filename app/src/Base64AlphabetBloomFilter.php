@@ -14,9 +14,9 @@ final class Base64AlphabetBloomFilter extends BloomFilter
         $this->cache = new \SplFixedArray(self::BASE64_ALPHABET_KEYSPACE_WIDTH_PLUS_PADDING_CHARACTER);
     }
 
-    protected function candidateDefinitelyDoesNotExistInStorage(Candidate $candidate): bool
+    protected function candidateDefinitelyDoesNotExistInStorage(Value $value): bool
     {
-        $hash = $this->hasher->hash($candidate);
+        $hash = $this->hasher->hash($value);
 
         foreach (\str_split($hash) as $character) {
             if ($this->cache[self::getIndexPositionForChar($character)] !== true) {
@@ -27,9 +27,9 @@ final class Base64AlphabetBloomFilter extends BloomFilter
         return false;
     }
 
-    protected function addItemToStorage(Candidate $candidate): void
+    protected function addItemToStorage(Value $value): void
     {
-        $hash = $this->hasher->hash($candidate);
+        $hash = $this->hasher->hash($value);
 
         if (! \preg_match('/^[a-zA-Z0-9+\/=]+$/', $hash)) {
             throw new UnsupportedCharacterException(

@@ -2,13 +2,13 @@
 
 namespace Test;
 
-use Nealio82\BloomFilter\Candidate;
+use Nealio82\BloomFilter\Hasher\OriginalStringHasher;
 use Nealio82\BloomFilter\LowercaseAlphanumericBloomFilter;
 use Nealio82\BloomFilter\UnsupportedCharacterException;
+use Nealio82\BloomFilter\Value;
 use PHPUnit\Framework\TestCase;
 use Test\Doubles\FixedStringHasher;
 use Test\Doubles\MismatchedStringHasher;
-use Test\Doubles\NonHashingStringHasher;
 
 final class LowercaseAlphanumericBloomFilterTest extends TestCase
 {
@@ -19,70 +19,70 @@ final class LowercaseAlphanumericBloomFilterTest extends TestCase
         );
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('aaa'))
+            $filter->definitelyNotInSet(new Value('aaa'))
         );
     }
 
     public function test_different_items(): void
     {
         $filter = new LowercaseAlphanumericBloomFilter(
-            new NonHashingStringHasher()
+            new OriginalStringHasher()
         );
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('bbb'))
+            $filter->definitelyNotInSet(new Value('bbb'))
         );
     }
 
     public function test_item_is_in_storage(): void
     {
         $filter = new LowercaseAlphanumericBloomFilter(
-            new NonHashingStringHasher()
+            new OriginalStringHasher()
         );
 
-        $filter->store(new Candidate('aaa'));
+        $filter->store(new Value('aaa'));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('aaa'))
+            $filter->definitelyNotInSet(new Value('aaa'))
         );
     }
 
     public function test_numeric_item_in_storage(): void
     {
         $filter = new LowercaseAlphanumericBloomFilter(
-            new NonHashingStringHasher()
+            new OriginalStringHasher()
         );
 
-        $filter->store(new Candidate('0123456789'));
+        $filter->store(new Value('0123456789'));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('0123456789'))
+            $filter->definitelyNotInSet(new Value('0123456789'))
         );
     }
 
     public function test_numeric_may_be_storage(): void
     {
         $filter = new LowercaseAlphanumericBloomFilter(
-            new NonHashingStringHasher()
+            new OriginalStringHasher()
         );
 
-        $filter->store(new Candidate('0123456789'));
+        $filter->store(new Value('0123456789'));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('123'))
+            $filter->definitelyNotInSet(new Value('123'))
         );
     }
 
     public function test_numeric_item_not_in_storage(): void
     {
         $filter = new LowercaseAlphanumericBloomFilter(
-            new NonHashingStringHasher()
+            new OriginalStringHasher()
         );
 
-        $filter->store(new Candidate('0123456789'));
+        $filter->store(new Value('0123456789'));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('aaa'))
+            $filter->definitelyNotInSet(new Value('aaa'))
         );
     }
 
@@ -92,55 +92,55 @@ final class LowercaseAlphanumericBloomFilterTest extends TestCase
             new FixedStringHasher('test')
         );
 
-        $filter->store(new Candidate('test'));
+        $filter->store(new Value('test'));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('tset'))
+            $filter->definitelyNotInSet(new Value('tset'))
         );
     }
 
     public function test_full_alphanumeric_range_not_in_set(): void
     {
         $filter = new LowercaseAlphanumericBloomFilter(
-            new NonHashingStringHasher()
+            new OriginalStringHasher()
         );
 
         $word = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
-        $filter->store(new Candidate('aaa'));
+        $filter->store(new Value('aaa'));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate($word))
+            $filter->definitelyNotInSet(new Value($word))
         );
     }
 
     public function test_full_alphanumeric_range_maybe_in_set(): void
     {
         $filter = new LowercaseAlphanumericBloomFilter(
-            new NonHashingStringHasher()
+            new OriginalStringHasher()
         );
 
         $word = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
-        $filter->store(new Candidate($word));
+        $filter->store(new Value($word));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate(\strrev($word)))
+            $filter->definitelyNotInSet(new Value(\strrev($word)))
         );
     }
 
     public function test_alphanumeric_range_subset_maybe_in_set(): void
     {
         $filter = new LowercaseAlphanumericBloomFilter(
-            new NonHashingStringHasher()
+            new OriginalStringHasher()
         );
 
         $word = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
-        $filter->store(new Candidate($word));
+        $filter->store(new Value($word));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('hello1234'))
+            $filter->definitelyNotInSet(new Value('hello1234'))
         );
     }
 
@@ -150,10 +150,10 @@ final class LowercaseAlphanumericBloomFilterTest extends TestCase
             new MismatchedStringHasher('test', 'testy')
         );
 
-        $filter->store(new Candidate('test'));
+        $filter->store(new Value('test'));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('testy'))
+            $filter->definitelyNotInSet(new Value('testy'))
         );
     }
 
@@ -161,22 +161,22 @@ final class LowercaseAlphanumericBloomFilterTest extends TestCase
     public function test_non_lowercase_character_is_not_supported(string $character): void
     {
         $filter = new LowercaseAlphanumericBloomFilter(
-            new NonHashingStringHasher()
+            new OriginalStringHasher()
         );
 
         $this->expectException(UnsupportedCharacterException::class);
-        $filter->store(new Candidate('aaa' . $character . 'bbb'));
+        $filter->store(new Value('aaa' . $character . 'bbb'));
     }
 
     /** @dataProvider nonAlphanumericCharacters */
     public function test_non_alphanumeric_character_is_not_supported(string $character): void
     {
         $filter = new LowercaseAlphanumericBloomFilter(
-            new NonHashingStringHasher()
+            new OriginalStringHasher()
         );
 
         $this->expectException(UnsupportedCharacterException::class);
-        $filter->store(new Candidate('aaa' . $character . 'bbb'));
+        $filter->store(new Value('aaa' . $character . 'bbb'));
     }
 
     public static function nonLowercaseCharacters(): \Generator
