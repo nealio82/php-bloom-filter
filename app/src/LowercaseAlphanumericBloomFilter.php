@@ -18,9 +18,9 @@ final class LowercaseAlphanumericBloomFilter extends BloomFilter
         $this->cache = new \SplFixedArray(self::LOWER_CASE_ALPHANUMERIC_KEYSPACE_WIDTH);
     }
 
-    protected function wordDefinitelyDoesNotExistInStorage(string $word): bool
+    protected function candidateDefinitelyDoesNotExistInStorage(Candidate $candidate): bool
     {
-        $hash = $this->hasher->hash($word);
+        $hash = $this->hasher->hash($candidate);
 
         foreach (\str_split($hash) as $character) {
             if ($this->cache[self::getIndexPositionForChar($character)] !== true) {
@@ -31,9 +31,9 @@ final class LowercaseAlphanumericBloomFilter extends BloomFilter
         return false;
     }
 
-    protected function addItemToStorage(string $word): void
+    protected function addItemToStorage(Candidate $candidate): void
     {
-        $hash = $this->hasher->hash($word);
+        $hash = $this->hasher->hash($candidate);
 
         if (! \preg_match('/^[a-z0-9]+$/', $hash)) {
             throw new UnsupportedCharacterException(

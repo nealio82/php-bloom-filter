@@ -2,6 +2,7 @@
 
 namespace Test\Doubles;
 
+use Nealio82\BloomFilter\Candidate;
 use Nealio82\BloomFilter\StringHasher;
 
 final class FixedStringHasher implements StringHasher
@@ -13,7 +14,7 @@ final class FixedStringHasher implements StringHasher
         $this->hash = $hash;
     }
 
-    public function hash(string $word): string
+    public function hash(Candidate $word): string
     {
         return $this->hash;
     }

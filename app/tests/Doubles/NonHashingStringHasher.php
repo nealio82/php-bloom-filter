@@ -2,12 +2,13 @@
 
 namespace Test\Doubles;
 
+use Nealio82\BloomFilter\Candidate;
 use Nealio82\BloomFilter\StringHasher;
 
 final class NonHashingStringHasher implements StringHasher
 {
-    public function hash(string $word): string
+    public function hash(Candidate $candidate): string
     {
-        return $word;
+        return $candidate->word;
     }
 }

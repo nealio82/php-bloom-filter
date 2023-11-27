@@ -2,6 +2,7 @@
 
 namespace Test;
 
+use Nealio82\BloomFilter\Candidate;
 use Nealio82\BloomFilter\LowercaseAlphanumericBloomFilter;
 use Nealio82\BloomFilter\MultiStrategyBloomFilter;
 use PHPUnit\Framework\TestCase;
@@ -18,10 +19,10 @@ final class MultiStrategyBloomFilterTest extends TestCase
             new LowercaseAlphanumericBloomFilter(new NonHashingStringHasher()),
         );
 
-        $filter->store('test');
+        $filter->store(new Candidate('test'));
 
         self::assertTrue(
-            $filter->definitelyNotInSet('bar')
+            $filter->definitelyNotInSet(new Candidate('bar'))
         );
     }
 
@@ -33,7 +34,7 @@ final class MultiStrategyBloomFilterTest extends TestCase
         $filter = new MultiStrategyBloomFilter($spy1, $spy2);
 
         self::assertTrue(
-            $filter->definitelyNotInSet('foo')
+            $filter->definitelyNotInSet(new Candidate('foo'))
         );
 
         self::assertTrue($spy1->wasCalled());
@@ -49,7 +50,7 @@ final class MultiStrategyBloomFilterTest extends TestCase
         $filter = new MultiStrategyBloomFilter($spy1, $spy2, $spy3);
 
         self::assertTrue(
-            $filter->definitelyNotInSet('foo')
+            $filter->definitelyNotInSet(new Candidate('foo'))
         );
     }
 
@@ -60,7 +61,7 @@ final class MultiStrategyBloomFilterTest extends TestCase
 
         $filter = new MultiStrategyBloomFilter($spy1, $spy2);
 
-        $filter->definitelyNotInSet('foo');
+        $filter->definitelyNotInSet(new Candidate('foo'));
 
         self::assertTrue($spy1->wasCalled());
         self::assertTrue($spy2->wasCalled());
@@ -74,7 +75,7 @@ final class MultiStrategyBloomFilterTest extends TestCase
         $filter = new MultiStrategyBloomFilter($spy1, $spy2);
 
         self::assertFalse(
-            $filter->definitelyNotInSet('foo')
+            $filter->definitelyNotInSet(new Candidate('foo'))
         );
     }
 
@@ -88,7 +89,7 @@ final class MultiStrategyBloomFilterTest extends TestCase
         self::assertSame('', $spy1->lastStoredWord);
         self::assertSame('', $spy2->lastStoredWord);
 
-        $filter->store('foo');
+        $filter->store(new Candidate('foo'));
 
         self::assertSame('foo', $spy1->lastStoredWord);
         self::assertSame('foo', $spy2->lastStoredWord);

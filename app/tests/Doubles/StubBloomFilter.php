@@ -3,20 +3,21 @@
 namespace Test\Doubles;
 
 use Nealio82\BloomFilter\BloomFilter;
+use Nealio82\BloomFilter\Candidate;
 
 final class StubBloomFilter extends BloomFilter
 {
     public function __construct(
-        private readonly bool $willFindWords
+        private readonly bool $willFindCandidates
     ) {
     }
 
-    protected function wordDefinitelyDoesNotExistInStorage(string $word): bool
+    protected function candidateDefinitelyDoesNotExistInStorage(Candidate $candidate): bool
     {
-        return ! $this->willFindWords;
+        return ! $this->willFindCandidates;
     }
 
-    protected function addItemToStorage(string $word): void
+    protected function addItemToStorage(Candidate $candidate): void
     {
     }
 }

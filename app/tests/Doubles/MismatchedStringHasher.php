@@ -2,6 +2,7 @@
 
 namespace Test\Doubles;
 
+use Nealio82\BloomFilter\Candidate;
 use Nealio82\BloomFilter\StringHasher;
 
 final class MismatchedStringHasher implements StringHasher
@@ -15,7 +16,7 @@ final class MismatchedStringHasher implements StringHasher
         $this->hashes = $hashes;
     }
 
-    public function hash(string $word): string
+    public function hash(Candidate $candidate): string
     {
         return $this->hashes[$this->position++];
     }

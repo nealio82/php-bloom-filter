@@ -4,5 +4,5 @@ namespace Nealio82\BloomFilter;
 
 interface StringHasher
 {
-    public function hash(string $word): string;
+    public function hash(Candidate $candidate): string;
 }

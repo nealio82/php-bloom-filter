@@ -3,6 +3,7 @@
 namespace Test\Doubles;
 
 use Nealio82\BloomFilter\BloomFilter;
+use Nealio82\BloomFilter\Candidate;
 
 final class BloomFilterSpy extends BloomFilter
 {
@@ -20,16 +21,16 @@ final class BloomFilterSpy extends BloomFilter
         return $this->wasCalled;
     }
 
-    protected function wordDefinitelyDoesNotExistInStorage(string $word): bool
+    protected function candidateDefinitelyDoesNotExistInStorage(Candidate $candidate): bool
     {
         $this->wasCalled = true;
 
-        return $this->innerFilter->definitelyNotInSet($word);
+        return $this->innerFilter->definitelyNotInSet($candidate);
     }
 
-    protected function addItemToStorage(string $word): void
+    protected function addItemToStorage(Candidate $candidate): void
     {
-        $this->innerFilter->store($word);
-        $this->lastStoredWord = $word;
+        $this->innerFilter->store($candidate);
+        $this->lastStoredWord = $candidate->word;
     }
 }
