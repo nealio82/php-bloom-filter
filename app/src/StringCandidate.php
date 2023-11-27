@@ -6,8 +6,7 @@ final readonly class StringCandidate implements Candidate
 {
     public function __construct(
         private string $word
-    )
-    {
+    ) {
     }
 
     public function value(): string

@@ -2,8 +2,8 @@
 
 namespace Test;
 
-use Nealio82\BloomFilter\StringCandidate;
 use Nealio82\BloomFilter\LowercaseAlphanumericBloomFilter;
+use Nealio82\BloomFilter\StringCandidate;
 use Nealio82\BloomFilter\UnsupportedCharacterException;
 use PHPUnit\Framework\TestCase;
 use Test\Doubles\FixedStringHasher;
