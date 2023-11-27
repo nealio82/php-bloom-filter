@@ -31,6 +31,6 @@ final class BloomFilterSpy extends BloomFilter
     protected function addItemToStorage(Candidate $candidate): void
     {
         $this->innerFilter->store($candidate);
-        $this->lastStoredWord = $candidate->word;
+        $this->lastStoredWord = $candidate->value();
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Test;
 
-use Nealio82\BloomFilter\Candidate;
+use Nealio82\BloomFilter\StringCandidate;
 use Nealio82\BloomFilter\LowercaseAlphanumericBloomFilter;
 use Nealio82\BloomFilter\MultiStrategyBloomFilter;
 use PHPUnit\Framework\TestCase;
@@ -19,10 +19,10 @@ final class MultiStrategyBloomFilterTest extends TestCase
             new LowercaseAlphanumericBloomFilter(new NonHashingStringHasher()),
         );
 
-        $filter->store(new Candidate('test'));
+        $filter->store(new StringCandidate('test'));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('bar'))
+            $filter->definitelyNotInSet(new StringCandidate('bar'))
         );
     }
 
@@ -34,7 +34,7 @@ final class MultiStrategyBloomFilterTest extends TestCase
         $filter = new MultiStrategyBloomFilter($spy1, $spy2);
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('foo'))
+            $filter->definitelyNotInSet(new StringCandidate('foo'))
         );
 
         self::assertTrue($spy1->wasCalled());
@@ -50,7 +50,7 @@ final class MultiStrategyBloomFilterTest extends TestCase
         $filter = new MultiStrategyBloomFilter($spy1, $spy2, $spy3);
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('foo'))
+            $filter->definitelyNotInSet(new StringCandidate('foo'))
         );
     }
 
@@ -61,7 +61,7 @@ final class MultiStrategyBloomFilterTest extends TestCase
 
         $filter = new MultiStrategyBloomFilter($spy1, $spy2);
 
-        $filter->definitelyNotInSet(new Candidate('foo'));
+        $filter->definitelyNotInSet(new StringCandidate('foo'));
 
         self::assertTrue($spy1->wasCalled());
         self::assertTrue($spy2->wasCalled());
@@ -75,7 +75,7 @@ final class MultiStrategyBloomFilterTest extends TestCase
         $filter = new MultiStrategyBloomFilter($spy1, $spy2);
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('foo'))
+            $filter->definitelyNotInSet(new StringCandidate('foo'))
         );
     }
 
@@ -89,7 +89,7 @@ final class MultiStrategyBloomFilterTest extends TestCase
         self::assertSame('', $spy1->lastStoredWord);
         self::assertSame('', $spy2->lastStoredWord);
 
-        $filter->store(new Candidate('foo'));
+        $filter->store(new StringCandidate('foo'));
 
         self::assertSame('foo', $spy1->lastStoredWord);
         self::assertSame('foo', $spy2->lastStoredWord);

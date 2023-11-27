@@ -3,7 +3,7 @@
 namespace Test;
 
 use Nealio82\BloomFilter\Base64AlphabetBloomFilter;
-use Nealio82\BloomFilter\Candidate;
+use Nealio82\BloomFilter\StringCandidate;
 use Nealio82\BloomFilter\UnsupportedCharacterException;
 use PHPUnit\Framework\TestCase;
 use Test\Doubles\FixedStringHasher;
@@ -19,7 +19,7 @@ final class Base64AlphabetBloomFilterTest extends TestCase
         );
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('aaa'))
+            $filter->definitelyNotInSet(new StringCandidate('aaa'))
         );
     }
 
@@ -30,7 +30,7 @@ final class Base64AlphabetBloomFilterTest extends TestCase
         );
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('bbb'))
+            $filter->definitelyNotInSet(new StringCandidate('bbb'))
         );
     }
 
@@ -41,10 +41,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
             new NonHashingStringHasher()
         );
 
-        $filter->store(new Candidate('abcdefghijklmnopqrstuvwxyz+/='));
+        $filter->store(new StringCandidate('abcdefghijklmnopqrstuvwxyz+/='));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate(\strtoupper($character)))
+            $filter->definitelyNotInSet(new StringCandidate(\strtoupper($character)))
         );
     }
 
@@ -55,10 +55,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
             new NonHashingStringHasher()
         );
 
-        $filter->store(new Candidate('ABCDEFGHIJKLMNOPQRSTUVWXYZ+/='));
+        $filter->store(new StringCandidate('ABCDEFGHIJKLMNOPQRSTUVWXYZ+/='));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate(\strtolower($character)))
+            $filter->definitelyNotInSet(new StringCandidate(\strtolower($character)))
         );
     }
 
@@ -69,10 +69,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
             new NonHashingStringHasher()
         );
 
-        $filter->store(new Candidate('abcdefghijklmnopqrstuvwxyz+/='));
+        $filter->store(new StringCandidate('abcdefghijklmnopqrstuvwxyz+/='));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate(\strtolower($character)))
+            $filter->definitelyNotInSet(new StringCandidate(\strtolower($character)))
         );
     }
 
@@ -83,10 +83,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
             new NonHashingStringHasher()
         );
 
-        $filter->store(new Candidate('ABCDEFGHIJKLMNOPQRSTUVWXYZ+/='));
+        $filter->store(new StringCandidate('ABCDEFGHIJKLMNOPQRSTUVWXYZ+/='));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate(\strtoupper($character)))
+            $filter->definitelyNotInSet(new StringCandidate(\strtoupper($character)))
         );
     }
 
@@ -97,10 +97,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
             new NonHashingStringHasher()
         );
 
-        $filter->store(new Candidate('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'));
+        $filter->store(new StringCandidate('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate(\strtoupper($character)))
+            $filter->definitelyNotInSet(new StringCandidate(\strtoupper($character)))
         );
     }
 
@@ -111,10 +111,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
             new NonHashingStringHasher()
         );
 
-        $filter->store(new Candidate('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/='));
+        $filter->store(new StringCandidate('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/='));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate(\strtoupper($character)))
+            $filter->definitelyNotInSet(new StringCandidate(\strtoupper($character)))
         );
     }
 
@@ -124,10 +124,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
             new NonHashingStringHasher()
         );
 
-        $filter->store(new Candidate('aAa'));
+        $filter->store(new StringCandidate('aAa'));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('aAa'))
+            $filter->definitelyNotInSet(new StringCandidate('aAa'))
         );
     }
 
@@ -137,10 +137,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
             new NonHashingStringHasher()
         );
 
-        $filter->store(new Candidate('0123456789'));
+        $filter->store(new StringCandidate('0123456789'));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('0123456789'))
+            $filter->definitelyNotInSet(new StringCandidate('0123456789'))
         );
     }
 
@@ -150,10 +150,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
             new NonHashingStringHasher()
         );
 
-        $filter->store(new Candidate('0123456789'));
+        $filter->store(new StringCandidate('0123456789'));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('123'))
+            $filter->definitelyNotInSet(new StringCandidate('123'))
         );
     }
 
@@ -163,10 +163,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
             new NonHashingStringHasher()
         );
 
-        $filter->store(new Candidate('0123456789'));
+        $filter->store(new StringCandidate('0123456789'));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('aaa'))
+            $filter->definitelyNotInSet(new StringCandidate('aaa'))
         );
     }
 
@@ -176,10 +176,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
             new FixedStringHasher('teST')
         );
 
-        $filter->store(new Candidate('teST'));
+        $filter->store(new StringCandidate('teST'));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('tSeT'))
+            $filter->definitelyNotInSet(new StringCandidate('tSeT'))
         );
     }
 
@@ -191,10 +191,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
 
         $word = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
-        $filter->store(new Candidate('aaa'));
+        $filter->store(new StringCandidate('aaa'));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate($word))
+            $filter->definitelyNotInSet(new StringCandidate($word))
         );
     }
 
@@ -206,10 +206,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
 
         $word = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
-        $filter->store(new Candidate($word));
+        $filter->store(new StringCandidate($word));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate(\strrev($word)))
+            $filter->definitelyNotInSet(new StringCandidate(\strrev($word)))
         );
     }
 
@@ -221,10 +221,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
 
         $word = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
-        $filter->store(new Candidate($word));
+        $filter->store(new StringCandidate($word));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('helloHELLO1234'))
+            $filter->definitelyNotInSet(new StringCandidate('helloHELLO1234'))
         );
     }
 
@@ -236,10 +236,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
 
         $word = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/=';
 
-        $filter->store(new Candidate($word));
+        $filter->store(new StringCandidate($word));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('+'))
+            $filter->definitelyNotInSet(new StringCandidate('+'))
         );
     }
 
@@ -251,10 +251,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
 
         $word = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/=';
 
-        $filter->store(new Candidate('+'));
+        $filter->store(new StringCandidate('+'));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate($word))
+            $filter->definitelyNotInSet(new StringCandidate($word))
         );
     }
 
@@ -264,10 +264,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
             new NonHashingStringHasher()
         );
 
-        $filter->store(new Candidate('+'));
+        $filter->store(new StringCandidate('+'));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('+'))
+            $filter->definitelyNotInSet(new StringCandidate('+'))
         );
     }
 
@@ -279,10 +279,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
 
         $word = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+=';
 
-        $filter->store(new Candidate($word));
+        $filter->store(new StringCandidate($word));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('/'))
+            $filter->definitelyNotInSet(new StringCandidate('/'))
         );
     }
 
@@ -294,10 +294,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
 
         $word = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+=';
 
-        $filter->store(new Candidate('/'));
+        $filter->store(new StringCandidate('/'));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate($word))
+            $filter->definitelyNotInSet(new StringCandidate($word))
         );
     }
 
@@ -307,10 +307,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
             new NonHashingStringHasher()
         );
 
-        $filter->store(new Candidate('/'));
+        $filter->store(new StringCandidate('/'));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('/'))
+            $filter->definitelyNotInSet(new StringCandidate('/'))
         );
     }
 
@@ -322,10 +322,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
             new FixedStringHasher($word)
         );
 
-        $filter->store(new Candidate($word));
+        $filter->store(new StringCandidate($word));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('helloHELLO1234'))
+            $filter->definitelyNotInSet(new StringCandidate('helloHELLO1234'))
         );
     }
 
@@ -337,10 +337,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
 
         $word = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890+/=';
 
-        $filter->store(new Candidate($word));
+        $filter->store(new StringCandidate($word));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new Candidate('helloHELLO1234'))
+            $filter->definitelyNotInSet(new StringCandidate('helloHELLO1234'))
         );
     }
 
@@ -350,10 +350,10 @@ final class Base64AlphabetBloomFilterTest extends TestCase
             new MismatchedStringHasher('test', 'testy')
         );
 
-        $filter->store(new Candidate('test'));
+        $filter->store(new StringCandidate('test'));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new Candidate('testy'))
+            $filter->definitelyNotInSet(new StringCandidate('testy'))
         );
     }
 
@@ -365,7 +365,7 @@ final class Base64AlphabetBloomFilterTest extends TestCase
         );
 
         $this->expectException(UnsupportedCharacterException::class);
-        $filter->store(new Candidate('aaa' . $character . 'bbb'));
+        $filter->store(new StringCandidate('aaa' . $character . 'bbb'));
     }
 
     public static function nonBase64AlphabetCharacters(): \Generator

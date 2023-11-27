@@ -2,10 +2,7 @@
 
 namespace Nealio82\BloomFilter;
 
-final readonly class Candidate
+interface Candidate
 {
-    public function __construct(
-        public string $word
-    ) {
-    }
+    public function value(): string|int;
 }
