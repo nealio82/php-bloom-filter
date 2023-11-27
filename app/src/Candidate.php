@@ -2,7 +2,29 @@
 
 namespace Nealio82\BloomFilter;
 
-interface Candidate
+final readonly class Candidate
 {
-    public function value(): string|int;
+    public function __construct(
+        private int|string $value
+    ) {
+    }
+
+    public function string(): string
+    {
+        return (string) $this->value;
+    }
+
+    public function integer(): int
+    {
+        if (! \is_numeric($this->value)) {
+            throw new CannotUseNonNumericStringAsIntegerException(
+                \sprintf(
+                    'The string "%s" contains characters not contained within the set 0-9',
+                    $this->value
+                )
+            );
+        }
+
+        return (int) $this->value;
+    }
 }

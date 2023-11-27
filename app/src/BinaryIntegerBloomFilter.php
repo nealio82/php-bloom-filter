@@ -8,12 +8,12 @@ final class BinaryIntegerBloomFilter extends BloomFilter
 
     protected function candidateDefinitelyDoesNotExistInStorage(Candidate $candidate): bool
     {
-        if ($this->filter === $candidate->value()) {
+        if ($this->filter === $candidate->integer()) {
             return false;
         }
 
         $filterBin = \strrev(\decbin($this->filter));
-        $candidateBin = \strrev(\decbin($candidate->value()));
+        $candidateBin = \strrev(\decbin($candidate->integer()));
 
         foreach (\str_split($candidateBin) as $position => $char) {
             if ($char === '1') {
@@ -28,6 +28,6 @@ final class BinaryIntegerBloomFilter extends BloomFilter
 
     protected function addItemToStorage(Candidate $candidate): void
     {
-        $this->filter = $this->filter | $candidate->value();
+        $this->filter = $this->filter | $candidate->integer();
     }
 }

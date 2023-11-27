@@ -3,7 +3,7 @@
 namespace Test;
 
 use Nealio82\BloomFilter\BinaryIntegerBloomFilter;
-use Nealio82\BloomFilter\IntegerCandidate;
+use Nealio82\BloomFilter\Candidate;
 use PHPUnit\Framework\TestCase;
 
 final class BinaryIntegerBloomFilterTest extends TestCase
@@ -13,7 +13,7 @@ final class BinaryIntegerBloomFilterTest extends TestCase
         $filter = new BinaryIntegerBloomFilter();
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new IntegerCandidate(123))
+            $filter->definitelyNotInSet(new Candidate(123))
         );
     }
 
@@ -22,10 +22,10 @@ final class BinaryIntegerBloomFilterTest extends TestCase
     {
         $filter = new BinaryIntegerBloomFilter();
 
-        $filter->store(new IntegerCandidate($number));
+        $filter->store(new Candidate($number));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new IntegerCandidate($number))
+            $filter->definitelyNotInSet(new Candidate($number))
         );
     }
 
@@ -34,10 +34,10 @@ final class BinaryIntegerBloomFilterTest extends TestCase
     {
         $filter = new BinaryIntegerBloomFilter();
 
-        $filter->store(new IntegerCandidate(255));
+        $filter->store(new Candidate(255));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new IntegerCandidate($number))
+            $filter->definitelyNotInSet(new Candidate($number))
         );
     }
 
@@ -46,10 +46,10 @@ final class BinaryIntegerBloomFilterTest extends TestCase
     {
         $filter = new BinaryIntegerBloomFilter();
 
-        $filter->store(new IntegerCandidate(0));
+        $filter->store(new Candidate(0));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new IntegerCandidate($number))
+            $filter->definitelyNotInSet(new Candidate($number))
         );
     }
 
@@ -57,12 +57,12 @@ final class BinaryIntegerBloomFilterTest extends TestCase
     {
         $filter = new BinaryIntegerBloomFilter();
 
-        $filter->store(new IntegerCandidate(1));
-        $filter->store(new IntegerCandidate(2));
-        $filter->store(new IntegerCandidate(4));
+        $filter->store(new Candidate(1));
+        $filter->store(new Candidate(2));
+        $filter->store(new Candidate(4));
 
         self::assertFalse(
-            $filter->definitelyNotInSet(new IntegerCandidate(3))
+            $filter->definitelyNotInSet(new Candidate(3))
         );
     }
 
@@ -70,19 +70,19 @@ final class BinaryIntegerBloomFilterTest extends TestCase
     {
         $filter = new BinaryIntegerBloomFilter();
 
-        $filter->store(new IntegerCandidate(1));
-        $filter->store(new IntegerCandidate(4));
+        $filter->store(new Candidate(1));
+        $filter->store(new Candidate(4));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new IntegerCandidate(2))
+            $filter->definitelyNotInSet(new Candidate(2))
         );
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new IntegerCandidate(3))
+            $filter->definitelyNotInSet(new Candidate(3))
         );
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new IntegerCandidate(6))
+            $filter->definitelyNotInSet(new Candidate(6))
         );
     }
 
@@ -92,10 +92,10 @@ final class BinaryIntegerBloomFilterTest extends TestCase
 
         $filter = new BinaryIntegerBloomFilter();
 
-        $filter->store(new IntegerCandidate(\bindec($bin)));
+        $filter->store(new Candidate(\bindec($bin)));
 
         self::assertTrue(
-            $filter->definitelyNotInSet(new IntegerCandidate(\bindec(\strrev($bin))))
+            $filter->definitelyNotInSet(new Candidate(\bindec(\strrev($bin))))
         );
     }
 

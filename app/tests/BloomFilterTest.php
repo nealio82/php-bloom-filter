@@ -2,7 +2,7 @@
 
 namespace Test;
 
-use Nealio82\BloomFilter\StringCandidate;
+use Nealio82\BloomFilter\Candidate;
 use PHPUnit\Framework\TestCase;
 use Test\Doubles\BloomFilterSpy;
 use Test\Doubles\StubBloomFilter;
@@ -15,7 +15,7 @@ final class BloomFilterTest extends TestCase
 
         $word = \sha1((string) \time());
 
-        $filter->store(new StringCandidate($word));
+        $filter->store(new Candidate($word));
 
         self::assertSame($word, $filter->lastStoredWord);
     }
