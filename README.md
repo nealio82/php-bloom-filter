@@ -1,11 +1,11 @@
 ## PHP Bloom Filter
 
-This package acts as a configurable Bloom filter, allowing you to confidently determine if a particular value has
-already been seen / cached by your application.
+This package acts as a configurable [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter), allowing you to
+confidently determine if a particular value has already been seen / cached by your application.
 
-It provides a **fast and memory-efficient** way of knowing for certain if a value has _definitely **not** been
-encountered yet_, but the tradeoff is that there is no way for knowing with absolute certainty if a value
-_definitely **has** been encountered_.
+It provides a [**fast and memory-efficient**](https://en.wikipedia.org/wiki/Bloom_filter#Space_and_time_advantages) way
+of knowing for certain if a value has _definitely **not** been encountered yet_, but the tradeoff is that there is no
+way for knowing with absolute certainty if a value _definitely **has** been encountered_.
 
 So if the Bloom filter says "No, this value has not been processed yet", you can be 100% sure that it hasn't. However,
 if the filter says "this value _might_ have been processed", you don't know that with absolute certainty and it's best
@@ -15,18 +15,47 @@ to double-check.
 
 You can use the provided Bloom filters individually if there's a low chance of false positives in your data set, but
 often a better idea is to use the `MultiStrategyBloomFilter` with several different hashing algorithms configured (read
-the full explanation below for more on why this is the case).
+the full explanation below for more on why this is the case). Using several different algorithms will increase the
+memory usage and reduce the performance of querying the filter, but this should still be a fraction of what it would be
+if you weren't using any filters at all.
 
 ```php
 use Nealio82\BloomFilter\Base64AlphabetBloomFilter;
+use Nealio82\BloomFilter\FullAsciiAlphabetBloomFilter;
 use Nealio82\BloomFilter\Hasher\Base64StringHasher;
 use Nealio82\BloomFilter\Hasher\Md5StringHasher;
+use Nealio82\BloomFilter\Hasher\OriginalStringHasher;
 use Nealio82\BloomFilter\Hasher\Sha1StringHasher;
 use Nealio82\BloomFilter\LowercaseAlphanumericBloomFilter;
 use Nealio82\BloomFilter\MultiStrategyBloomFilter;
 use Nealio82\BloomFilter\Value;
 
+/*
+ * Storing only the raw string using the full ASCII character set as the Bloom filter
+ */
+$stringFilter = new FullAsciiAlphabetBloomFilter(
+    new OriginalStringHasher()
+);
+
+\var_dump($stringFilter->definitelyNotInSet(new Value('hello'))); // true
+
+$stringFilter->store(new Value('hello'));
+
+// These three values are all sub-sets of 'hello', and will match if we only compare raw strings
+\var_dump($stringFilter->definitelyNotInSet(new Value('hello'))); // false
+\var_dump($stringFilter->definitelyNotInSet(new Value('hell'))); // false
+\var_dump($stringFilter->definitelyNotInSet(new Value('he'))); // false
+
+// This super-set of 'hello' will not match, as we haven't stored the following characters in the filter: `, wrd`
+\var_dump($stringFilter->definitelyNotInSet(new Value('hello, world'))); // true
+
+/*
+ * Chaining multiple Bloom filters to reduce the chance of false positives
+ */
 $stringFilter = new MultiStrategyBloomFilter(
+    new FullAsciiAlphabetBloomFilter(
+        new OriginalStringHasher()
+    ),
     new Base64AlphabetBloomFilter(
         new Base64StringHasher()
     ),
@@ -38,41 +67,156 @@ $stringFilter = new MultiStrategyBloomFilter(
     ),
 );
 
-var_dump($stringFilter->definitelyNotInSet(new Value('hello'))); // true
+\var_dump($stringFilter->definitelyNotInSet(new Value('hello'))); // true
 
 $stringFilter->store(new Value('hello'));
 
-var_dump($stringFilter->definitelyNotInSet(new Value('hello'))); // false
-var_dump($stringFilter->definitelyNotInSet(new Value('he'))); // false
+\var_dump($stringFilter->definitelyNotInSet(new Value('hello'))); // false
 
-var_dump($stringFilter->definitelyNotInSet(new Value('hello, world'))); // true
+// The sub-sets of 'hello' have been hashed against different algorithms, and the number of false matches has reduced
+\var_dump($stringFilter->definitelyNotInSet(new Value('hell'))); // true
+\var_dump($stringFilter->definitelyNotInSet(new Value('he'))); // true
+
+// This super-set of 'hello' will not match, as we haven't stored the following characters in any filters: `, wrd`
+\var_dump($stringFilter->definitelyNotInSet(new Value('hello, world'))); // true
 ```
 
 ## More about Bloom filters
 
 ### An example
 
-Imagine you have two data sources, each containing millions of records, which you need to query and cross-reference from
-several different data sources all over a flaky network connection. Let's assume that query batching strategies aren't
-applicable here for whatever reason; perhaps dataset B is a rest API which only allows you to fetch single items by ID.
+Imagine you have a CSV file containing millions of records, which you need to process and cross-reference against
+several different data sources via a flaky network connection. Let's assume that query batching strategies aren't
+applicable here for whatever reason; perhaps dataset B is exposed via a 3rd-party rest API which only allows you to
+fetch single items by ID. In this example we'll assume that there isn't a 1:1 mapping between your CSV and the 3rd-party
+API, meaning that every row being processed in your CSV in could potentially end up making the very same API request
+that processing the previous row made.
 
-For each record in dataset A, you need to look up one or more records from dataset B. In order to reduce wasted network
-traffic you want to find a way of avoiding making the network calls for information that you've already fetched.
+In order to reduce wasted time waiting for responses over your network, you want to find a way of avoiding making the
+lookup calls for information that you've already fetched. Or, perhaps in this example, this 3rd party has a 'pay per
+lookup' model and you're going to bankrupt yourself by repeating the same query over-and-over, which means that
+distributing the job across asynchronous workers won't help you here. Either way, **the goal is to only fetch the
+information if we know we haven't already requested it**.
 
-You might be thinking "Aha! I'll just cache **all** results in an array and use the ID as the array key!". Well, as your
-data sets grow so will your memory usage, and you're going to run into the classic 'failed allocating .... bytes'
-failure mode sooner or later.
+You might be thinking "Aha! I'll just cache **all** results in an array and use the request URL / params as the array
+key!". Well, as your data sets grow so will your memory usage, and you're going to run into the classic 'failed
+allocating .... bytes' failure mode sooner or later.
 
 You could try storing all the results in a more memory-efficient structure, such as
 a [linked list](https://www.php.net/manual/en/class.spldoublylinkedlist.php), but these structures are slow to search
-through and doing it for millions of records is not going to be a quick task. You want a way of knowing if a particular
-record has already been queried *before* you start going into your linked lists looking for it.
+through and doing it for millions of records is not going to be a quick task.
 
-So you're left with the choice of making a slow search through a linked list for every one of millions of records on
-each iteration regardless of if you've already got the data or not, or making a slow network call every time instead.
+So you're seemingly left with the choice of making a slow search through a linked list for each of millions of records
+on each iteration regardless of if you've already got the data or not, or making a slow and expensive network call every
+time instead.
+
+You need a way of knowing if a particular record has already been queried *before* you start going into your linked
+lists looking for it. Remember, we'd be doing this iteration through the list for *every* row in the CSV. Unless you can
+avoid unnecessary trips through the list, it's going to take ages to process your CSV...
 
 A Bloom filter helps here because you can immediately know if you **haven't** already fetched the data and move
-straight to the 'fetch info over the network' step, thus avoiding the slow iteration through a linked list.
+straight to the 'fetch info over the network' step, thus avoiding the slow iterations through a growing linked list.
+
+#### Diagram
+
+```
+                  +---------------------+
+                  | Is it in the cache? |
+                  +---------------------+
+                            |
+                            v
+                  +--------------------+
+                  | Bloom filter check |
+                  +---------+----------+
+                            |
+             +--------------+-------------+
+             |                            | 
+             v                            v
++--------------------------+       +-------------------+
+| Definitely not in filter |       | Possibly in cache | 
++------------+-------------+       +---------+---------+
+             |                               |
+      we can bypass the                      v
+    entire cache check flow     +-------------------------+
+             |                  | Linked list cache check |
+             |                  +------------+------------+
+             |                               |
+             |                               |
+             |             linked lists are highly efficient with
+             |             memory usage, but slow to search through
+             |                               |
+             |                               |
+             |                   +-----------+-----------+
+             |                   |                       |
+             |            we should avoid                |                 
+             |          this path if we can              |
+             |                   |                       |
+             |                   v                       v
+             |        +--------------------+     +----------------+
+             |        | Not found in cache |     | Found in cache |
+             |        +---------+----------+     +-------+--------+
+             |                  |                        |
+             |                  |                 avoid unnecessary
+             |                  |                 network requests!
+             |                  v                        |
+             |     +-------------------------------+     |
+             +---->| Make network request          |     |
+                   | Add data to linked list cache |     |
+                   | Add record to Bloom filter    |     |
+                   +-------------------+-----------+     |
+                                       |                 |
+                                       v                 v
+                                 +----------------------------+
+                                 |   Return Value to client   |
+                                 +----------------------------+
+```
+
+#### Other caching improvements to use alongside a Bloom filter
+
+There are additional caching strategies you could employ to make the lookup through the linked list faster, although
+these are beyond the scope of this package.
+
+One particular strategy is having an array of linked lists, where the array key is some representation of part of the
+hash of the record you're storing. Instead of one huge linked list containing all records in the cache, you would end up
+with several much smaller linked lists which you can jump directly to and so split the search into smaller chunks.
+
+Eg, if you needed memory-efficient storage of records inside linked lists, and record IDs are UUIDs, you could arrange
+an array of linked lists like so:
+
+```php
+/**
+ * Given this small sample of a set of millions of record IDs:
+ * 46a6e6df-9ad5-4d05-a7a3-e2d06582678d
+ * a7582da0-bee2-42fd-91b5-127dbd1c1428
+ * d450bf2f-0c41-417c-b46d-d35a0d124d0e
+ * 51a9cacc-1ece-4313-88c3-4dca92dc9a05
+ * a7582da0-9ad5-4d05-a7a3-e2d06582678d
+ * a7582da0-bee2-42fd-91b5-127dbd1c1428
+ * d450bf2f-1ece-4313-88c3-4dca92dc9a05
+ *
+ * We can use the first section of the UUID to distribute 
+ * the IDs across the buckets of linked list caches.
+ */
+
+$bucketList = [
+ '46a6e6df' => new \SplDoublyLinkedList(), // contains '46a6e6df-9ad5-4d05-a7a3-e2d06582678d'
+ 'a7582da0' => new \SplDoublyLinkedList(), // contains 'a7582da0-bee2-42fd-91b5-127dbd1c1428', 'a7582da0-9ad5-4d05-a7a3-e2d06582678d', and 'a7582da0-bee2-42fd-91b5-127dbd1c1428'
+ 'd450bf2f' => new \SplDoublyLinkedList(), // contains 'd450bf2f-0c41-417c-b46d-d35a0d124d0e' and 'd450bf2f-1ece-4313-88c3-4dca92dc9a05'
+ '51a9cacc' => new \SplDoublyLinkedList(), // contains '51a9cacc-1ece-4313-88c3-4dca92dc9a05'
+];
+
+/** 
+ * Now, when we need to check the cache for a particular ID,
+ * such as 'a7582da0-9ad5-4d05-a7a3-e2d06582678d'
+ * instead of searching one long list for the existence of a record,
+ * we know immediately to jump to the a7582da0 bucket and search 
+ * inside there instead. 
+ * 
+ * This strategy uses more memory than a single linked list, 
+ * but increases performance of searching, especially with very
+ * large data sets  
+ */
+```
 
 ### Other example cases
 
@@ -193,7 +337,8 @@ example, if we had a filter containing space for only `[a][b][c][d][e][f]` and a
 converted all inputs to one of the letters `a` to `f`, we would be severely limited by the key-space of 6 values that we
 could store in our filter.
 
-The ASCII character set has a key-space width of `128` (`0` to `127`), so a hashing algorithm which can make use of
+The [ASCII character set has a key-space width of `128`](https://cs.smu.ca/~porter/csc/ref/ascii.html) (`0` to `127`),
+so a hashing algorithm which can make use of
 the `=`, `~`, `DEL`, `SPACE`, etc characters would also reduce the risk of false positives.
 
 #### More entropy
@@ -201,7 +346,7 @@ the `=`, `~`, `DEL`, `SPACE`, etc characters would also reduce the risk of false
 Some Bloom filters hash the same data several times over. This could also be an effective strategy for diversifying the
 hashes that you check in your filter. You are limited only by the set of unique characters you can store in your key
 space (and how effectively the hashing algorithm distributes values across them), so have a go at adding your own. You
-could create a hashing algorithm which maps words to sets of Emojis, and you would then compare smilies against poops. 
+could create a hashing algorithm which maps words to sets of Emojis, and you would then compare smilies against poops.
 
 ### Checking integers
 
@@ -217,7 +362,8 @@ numbers to their binary representations and then storing the filter as a single 
 take 4 Bytes (representing up to about `2 billion` values), and on 64-bit systems this will use 8
 Bytes (`9 billion billion` values).
 
-We begin with a filter with the internal integer set to `0`. Represented as a single Byte, this is `00000000`.
+We begin with a filter with the internal integer set to `0`.
+[Represented as a single Byte, this is `00000000`](https://www.oreilly.com/library/view/cisco-ccentccna-icnd1/9780133367843/app01.html).
 
 When we want to store the number `1`, the internal integer's Byte representation becomes `00000001`.
 
