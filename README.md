@@ -1,20 +1,20 @@
 ## PHP Bloom Filter
 
 This package acts as a configurable [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter), allowing you to
-confidently determine if a particular value has already been seen / cached by your application.
+confidently determine if a particular value has **not** already been seen / cached by your application.
 
 It provides a [**fast and memory-efficient**](https://en.wikipedia.org/wiki/Bloom_filter#Space_and_time_advantages) way
 of knowing for certain if a value has _definitely **not** been encountered yet_, but the tradeoff is that there is no
 way for knowing with absolute certainty if a value _definitely **has** been encountered_.
 
 So if the Bloom filter says "No, this value has not been processed yet", you can be 100% sure that it hasn't. However,
-if the filter says "this value _might_ have been processed", you don't know that with absolute certainty and it's best
-to double-check.
+if the filter says "this value _might_ have been processed", you don't know that with absolute certainty and it would be
+best to double-check.
 
 ### Using this package
 
 You can use the provided Bloom filters individually if there's a low chance of false positives in your data set, but
-often a better idea is to use the `MultiStrategyBloomFilter` with several different hashing algorithms configured (read
+a better idea may be to use the `MultiStrategyBloomFilter` with several different hashing algorithms configured (read
 the full explanation below for more on why this is the case). Using several different algorithms will increase the
 memory usage and reduce the performance of querying the filter, but this should still be a fraction of what it would be
 if you weren't using any filters at all.
@@ -166,9 +166,9 @@ straight to the 'fetch info over the network' step, thus avoiding the slow itera
                    +-------------------+-----------+     |
                                        |                 |
                                        v                 v
-                                 +----------------------------+
-                                 |   Return Value to client   |
-                                 +----------------------------+
+                                 +--------------------------------+
+                                 | Return the value to the client |
+                                 +--------------------------------+
 ```
 
 #### Other caching improvements to use alongside a Bloom filter
@@ -191,7 +191,7 @@ an array of linked lists like so:
  * d450bf2f-0c41-417c-b46d-d35a0d124d0e
  * 51a9cacc-1ece-4313-88c3-4dca92dc9a05
  * a7582da0-9ad5-4d05-a7a3-e2d06582678d
- * a7582da0-bee2-42fd-91b5-127dbd1c1428
+ * a7582da0-bee2-42fd-91b5-e2d06582678d
  * d450bf2f-1ece-4313-88c3-4dca92dc9a05
  *
  * We can use the first section of the UUID to distribute 
@@ -200,7 +200,7 @@ an array of linked lists like so:
 
 $bucketList = [
  '46a6e6df' => new \SplDoublyLinkedList(), // contains '46a6e6df-9ad5-4d05-a7a3-e2d06582678d'
- 'a7582da0' => new \SplDoublyLinkedList(), // contains 'a7582da0-bee2-42fd-91b5-127dbd1c1428', 'a7582da0-9ad5-4d05-a7a3-e2d06582678d', and 'a7582da0-bee2-42fd-91b5-127dbd1c1428'
+ 'a7582da0' => new \SplDoublyLinkedList(), // contains 'a7582da0-bee2-42fd-91b5-127dbd1c1428', 'a7582da0-9ad5-4d05-a7a3-e2d06582678d', and 'a7582da0-bee2-42fd-91b5-e2d06582678d'
  'd450bf2f' => new \SplDoublyLinkedList(), // contains 'd450bf2f-0c41-417c-b46d-d35a0d124d0e' and 'd450bf2f-1ece-4313-88c3-4dca92dc9a05'
  '51a9cacc' => new \SplDoublyLinkedList(), // contains '51a9cacc-1ece-4313-88c3-4dca92dc9a05'
 ];
@@ -218,7 +218,7 @@ $bucketList = [
  */
 ```
 
-### Other example cases
+### Other example use-cases for Bloom filters
 
 * Web crawlers (e.g. Googlebot) can use Bloom filters to know if they've already crawled a domain / page so that they
   can avoid never-ending crawls when they encounter circular references between pages. At the scale of billions of pages
@@ -338,15 +338,17 @@ converted all inputs to one of the letters `a` to `f`, we would be severely limi
 could store in our filter.
 
 The [ASCII character set has a key-space width of `128`](https://cs.smu.ca/~porter/csc/ref/ascii.html) (`0` to `127`),
-so a hashing algorithm which can make use of
-the `=`, `~`, `DEL`, `SPACE`, etc characters would also reduce the risk of false positives.
+so a hashing algorithm which can make use of the `=`, `~`, `DEL`, `SPACE`, etc characters would also reduce the risk of
+false positives.
 
 #### More entropy
 
-Some Bloom filters hash the same data several times over. This could also be an effective strategy for diversifying the
-hashes that you check in your filter. You are limited only by the set of unique characters you can store in your key
-space (and how effectively the hashing algorithm distributes values across them), so have a go at adding your own. You
-could create a hashing algorithm which maps words to sets of Emojis, and you would then compare smilies against poops.
+Some Bloom
+filters [hash the same data several times over](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions).
+This could also be an effective strategy for diversifying the hashes that you check in your filter. You are limited only
+by the set of unique characters you can store in your key space (and how effectively the hashing algorithm distributes
+values across them), so have a go at adding your own. You could create a hashing algorithm which maps words to sets of
+Emojis, and you would then compare smilies against poops.
 
 ### Checking integers
 
@@ -384,3 +386,14 @@ Any numbers within the range `01101111` (`111`) to `01111111` (`127`), and `1000
 
 It's most efficient when using an integer-based Bloom filter like this one to process results in ascending order if you
 can, as the left-most bit will always be the last to flip to `true`.
+
+## Caveats of Bloom filters
+
+1. While you can always be sure that the filter is 100% correct when it says something definitely is not contained
+   within the filter, the opposite is not true. That means that you cannot ever be certain that a particular value
+   definitely _does_ exist within the filter.
+2. As the filter begins to fill up with values, the rate of false positives also increases. A fully saturated filter (
+   where all the bits have been flipped to `1`) will be just as effective as having no filter at all. However, even once
+   the filter is completely saturated you would not see a noticeable performance penalty, and the time savings you made
+   while the filter was filling up from the beginning would probably be a huge benefit.
+3. It's an additional layer of caching and complexity in your system.
